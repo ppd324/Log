@@ -21,9 +21,9 @@ const std::size_t OUTPUT_CFNT = 0x0007; //输出到控台、日志文件、TCP�
 const std::size_t OUTPUT_CFNH = 0x000C; //输出到控台、日志文件、HTTP网络
 const static std::size_t kLogSaveDays = 7;
 const static std::size_t kLogFileSize = 1024*1024*100;
-const static std::string kLogBaseName = "service.log";
+const static std::string kLogBaseName = "test";
 #ifdef _WIN32
-const static std::string kLogBasePath = "C:";
+const static std::string kLogBasePath = "H:\\c++\\Log\\";
 #else
 const static std::string kLogBasePath = "./log/";
 #endif
@@ -36,8 +36,8 @@ public:
                  std::size_t fileSize = kLogFileSize);
     ~LoggerOutput();
 
-    bool setFileOption(std::string filePath = kLogBasePath,
-                       std::string fileName = kLogBaseName,
+    bool setFileOption(const std::string& filePath = kLogBasePath,
+                       const std::string& fileName = kLogBaseName,
                        std::size_t logSaveDays = kLogSaveDays,
                        std::size_t fileSize = kLogFileSize);
 
@@ -48,6 +48,8 @@ public:
     void SetConsoleOption(bool isPrint);
 
     bool SetLogFileFlushOption(const size_t nFlushInterval, const size_t checkEveryN);
+
+    bool setLogMode(size_t mode);
 
     void WriteLog(const std::string& strLog);
 

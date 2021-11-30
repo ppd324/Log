@@ -65,14 +65,20 @@ namespace Log {
         );
 
         static void setLogFmtType(Logger::LogFmtType type);
+
+        static void setLogMode(size_t mode);
+
+        static void setLogFile(const std::string &filepath, const std::string &filename, std::size_t LogSaveDays,
+                               std::size_t LogFileSize);
         /***********************************
-         * 说明：写日志
+         * 说明：拼接日志字符串
          * param：NULL
          *
          *
          */
          void writelog();
          void fmtToJson();
+
 
     private:
         MicroTimestamp &&m_time;

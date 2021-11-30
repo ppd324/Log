@@ -7,6 +7,8 @@ using namespace Log;
 int main() {
     initLogLevel();
     Logger::setLogFmtType(Logger::STRING);
+    Logger::setLogMode(OUTPUT_CF);
+    Logger::setLogFile("H:\\c++\\Log\\","test",7,1024*1024*100);
     LOG_DEBUG<<"hello world";
     LOG_TRACE<<7<<"jisdjfj"<<0.2154545;
     LOG_INFO<<"hello world"<<" 11 + "<<"20 = "<<11+20;

@@ -73,4 +73,13 @@ void Log::initLogLevel() {
     return;
 }
 
+void Logger::setLogMode(size_t mode) {
+    m_loggerOutput.setLogMode(mode);
+}
+
+void Logger::setLogFile(const std::string &filepath, const std::string &filename, std::size_t LogSaveDays,
+                        std::size_t LogFileSize) {
+    m_loggerOutput.setFileOption(filepath,filename,LogSaveDays,LogFileSize);
+}
+
 

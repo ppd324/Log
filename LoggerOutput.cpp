@@ -5,7 +5,7 @@
 #include "LoggerOutput.h"
 
 LoggerOutput::LoggerOutput(std::string filePath, std::string fileName, std::size_t logSaveDays, std::size_t fileSize):
-                    m_logFile(fileName,fileName,logSaveDays,fileSize),
+                    m_logFile(filePath,fileName,logSaveDays,fileSize),
                     m_outputMode(OUTPUT_CONSOLE)
 {
     getOutputCallback();
@@ -58,4 +58,16 @@ void LoggerOutput::writeToCF(const std::string& strLog)
 void LoggerOutput::Flush()
 {
 
+}
+
+bool LoggerOutput::setLogMode(size_t mode) {
+    m_outputMode = mode;
+    getOutputCallback();
+    return true;
+}
+
+bool LoggerOutput::setFileOption(const std::string& filePath, const std::string& fileName, std::size_t logSaveDays,
+                                 std::size_t fileSize) {
+    m_logFile.setLogFileOption(filePath, fileName, logSaveDays, fileSize);
+    return true;
 }
