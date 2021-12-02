@@ -53,7 +53,7 @@ void LoggerOutput::writeToF(const std::string& strLog)
 void LoggerOutput::writeToCF(const std::string& strLog)
 {
     fwrite(strLog.c_str(), 1, strLog.length(), stdout);
-    m_logFile.append(strLog);
+    m_logFile.asyncAppend(strLog);
 }
 void LoggerOutput::Flush()
 {

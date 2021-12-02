@@ -3,21 +3,27 @@
 //
 
 #include <ctime>
+#include <vector>
+#include <functional>
 #include "LogFile.h"
 size_t LogFile::currentSize = 0;
 size_t LogFile::logLines = 0;
 size_t LogFile::fileNum = 0;
 
-LogFile::LogFile(std::string filepath, std::string filename, std::size_t LogSaveDays, std::size_t LogFileSize):filepath(filepath),filename(filename),LogSaveDays(LogSaveDays),LogFileSize(LogFileSize) {
+
+LogFile::LogFile(std::string filepath, std::string filename, std::size_t LogSaveDays, std::size_t LogFileSize):filepath(filepath),filename(filename),LogSaveDays(LogSaveDays),LogFileSize(LogFileSize),m_currentBuffer(new Buffer),m_nextBuffer(new Buffer) {
     fileName = filepath+filename+"_log"+std::to_string(fileNum)+".txt";
     std::cout<<"file name is "<<fileName<<std::endl;
     out = std::ofstream(fileName,std::ios_base::in|std::ios_base::trunc);
     fileStoreDays[time(0)] = fileName;
-    std::thread(monitorFileTime());
+    running = true;
+    m_thread =  std::thread(std::mem_fn(&LogFile::threadfunc),this);
 
 }
 
 LogFile::~LogFile() {
+    running = false;
+    m_thread.join();
     if(out.is_open()) {
         out.close();
     }
@@ -43,6 +49,83 @@ bool LogFile::append(const std::string &strLog) {
         return false;
     }
     return true;
+}
+bool LogFile::asyncAppend(const std::string &strLog) {
+    auto len = strLog.length();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if(m_currentBuffer->avail() > len) {
+        m_currentBuffer->append(strLog.c_str(),len);
+    }else {
+        m_bufferVector.emplace_back(std::move(m_currentBuffer));
+        if(m_nextBuffer) {
+            m_currentBuffer = std::move(m_nextBuffer);
+        }else {
+            m_currentBuffer.reset(new Buffer);
+        }
+        m_currentBuffer->append(strLog.c_str(),len);
+        m_cond.notify_one();
+    }
+}
+
+void LogFile::bufferToWriteFile(BufferVector &buffervector) {
+    for(auto &buffer : buffervector) {
+        out<<buffer->data();
+    }
+    currentSize = getFileSize();
+    if(currentSize > this->LogFileSize) {
+        ++fileNum;
+        fileName = filepath + filename + "_log" + std::to_string(fileNum) + ".txt";
+        if (out.is_open()) {
+            out.close();
+        }
+        out = std::ofstream(fileName, std::ios_base::in | std::ios_base::trunc);
+        fileStoreDays[time(0)] = fileName;
+    }
+    buffervector.clear();
+}
+void LogFile::threadfunc() {
+    BufferPtr newBuffer1(new Buffer);
+    BufferPtr newBuffer2(new Buffer);
+    newBuffer1->bzero();
+    newBuffer2->bzero();
+    BufferVector bufferToWrite;
+    bufferToWrite.reserve(16);
+    while(running) {
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            /*if(m_bufferVector.empty()) {
+                m_cond.wait_until(lock,now + std::chrono::microseconds(1000),[&](){
+                    return !m_bufferVector.empty();
+                });
+                m_cond.wait_for()
+            }*/
+            if(m_cond.wait_for(lock,std::chrono::microseconds(1000),[&](){return !m_bufferVector.empty();})) {
+                m_bufferVector.push_back(std::move(m_currentBuffer));
+                m_currentBuffer = std::move(newBuffer1);
+                bufferToWrite.swap(m_bufferVector);
+                if(!m_nextBuffer) {
+                    m_nextBuffer = std::move(newBuffer2);
+                }
+            }else {
+                std::cout<<"time out"<<std::endl;
+                m_bufferVector.push_back(std::move(m_currentBuffer));
+                m_currentBuffer = std::move(newBuffer1);
+                bufferToWrite.swap(m_bufferVector);
+                if(!m_nextBuffer) {
+                    m_nextBuffer = std::move(newBuffer2);
+                }
+            }
+
+        }
+        bufferToWriteFile(bufferToWrite);
+        newBuffer1 = std::make_unique<Buffer>();
+        newBuffer1->bzero();
+        if(newBuffer2 == nullptr) {
+            newBuffer2 = std::make_unique<Buffer>();
+            newBuffer2->bzero();
+        }
+
+    }
 }
 size_t LogFile::getFileSize() {
     std::ifstream in(fileName.c_str());

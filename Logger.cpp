@@ -19,7 +19,7 @@ const char* LogLevelName[Logger::NUM_LOG_LEVELS] = {
 };
 
 Logger::Logger(const char *filename, int line,LogLevel lever, const char *func)
-:m_filename(filename), m_nline(line),m_lever(lever),m_strFunc(func),m_time(std::move(MicroTimestamp::Now()))
+:m_filename(filename), m_nline(line),m_lever(lever),m_strFunc(func),m_time(MicroTimestamp::Now())
 {
 
 }

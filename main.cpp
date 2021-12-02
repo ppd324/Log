@@ -27,6 +27,8 @@ int main() {
         i++;
     }
     t1.join();
+    LOG_WARN<<"hello world";
+    LOG_INFO<<"hello world";
     //LOG_FATAL<<"sfjkjksfjkf"<<"fsfkkskf"<<7888787878787;
 
     std::cout << "Hello, World!" << std::endl;

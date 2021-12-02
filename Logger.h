@@ -81,7 +81,7 @@ namespace Log {
 
 
     private:
-        MicroTimestamp &&m_time;
+        MicroTimestamp m_time;
         const char* m_filename;
         LogLevel m_lever;
         bool m_isflush;
